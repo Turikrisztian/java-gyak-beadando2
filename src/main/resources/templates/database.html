@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<head>
+    <title>Adatbázis – Napló</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="space-y-10">
+
+        <section class="bg-white p-6 rounded-xl shadow">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Diákok</h2>
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 border-b">ID</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 border-b">Név</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 border-b">Osztály</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 border-b">Nem</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="d : ${diakok}" class="hover:bg-gray-50">
+                    <td class="px-3 py-2 text-sm border-b" th:text="${d.id}"></td>
+                    <td class="px-3 py-2 text-sm border-b" th:text="${d.nev}"></td>
+                    <td class="px-3 py-2 text-sm border-b" th:text="${d.osztaly}"></td>
+                    <td class="px-3 py-2 text-sm border-b"
+                        th:text="${d.fiu == -1} ? 'Fiú' : 'Lány'"></td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="bg-white p-6 rounded-xl shadow">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Tantárgyak</h2>
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 border-b">ID</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 border-b">Név</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 border-b">Kategória</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="t : ${targyak}" class="hover:bg-gray-50">
+                    <td class="px-3 py-2 text-sm border-b" th:text="${t.id}"></td>
+                    <td class="px-3 py-2 text-sm border-b" th:text="${t.nev}"></td>
+                    <td class="px-3 py-2 text-sm border-b" th:text="${t.kategoria}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="bg-white p-6 rounded-xl shadow">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Jegyek (legutóbbi 100)</h2>
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 border-b">Dátum</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 border-b">Diák</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 border-b">Osztály</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 border-b">Tárgy</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 border-b">Érték</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 border-b">Típus</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="j : ${jegyek}" class="hover:bg-gray-50">
+                    <td class="px-3 py-2 text-sm border-b" th:text="${j.datum}"></td>
+                    <td class="px-3 py-2 text-sm border-b" th:text="${j.diak.nev}"></td>
+                    <td class="px-3 py-2 text-sm border-b" th:text="${j.diak.osztaly}"></td>
+                    <td class="px-3 py-2 text-sm border-b" th:text="${j.targy.nev}"></td>
+                    <td class="px-3 py-2 text-sm border-b" th:text="${j.ertek}"></td>
+                    <td class="px-3 py-2 text-sm border-b" th:text="${j.tipus}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+    </div>
+</div>
+</body>
+</html>

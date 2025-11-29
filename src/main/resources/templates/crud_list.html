@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<head>
+    <title>Diákok kezelése</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="bg-white p-8 rounded-xl shadow-lg">
+        <div class="flex justify-between items-center mb-6 border-b pb-4">
+            <h2 class="text-3xl font-bold text-gray-800">Diákok kezelése (CRUD)</h2>
+            <a href="/crud/diak/uj"
+               class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition">
+                + Új diák hozzáadása
+            </a>
+        </div>
+
+        <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <thead class="bg-gray-100">
+            <tr>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-b">ID</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-b">Név</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-b">Osztály</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-b">Nem</th>
+                <th class="px-4 py-2 text-right text-sm font-semibold text-gray-700 border-b">Műveletek</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="d : ${diakok}" class="hover:bg-gray-50">
+                <td class="px-4 py-2 border-b text-sm" th:text="${d.id}"></td>
+                <td class="px-4 py-2 border-b text-sm" th:text="${d.nev}"></td>
+                <td class="px-4 py-2 border-b text-sm" th:text="${d.osztaly}"></td>
+                <td class="px-4 py-2 border-b text-sm"
+                    th:text="${d.fiu == -1} ? 'Fiú' : 'Lány'"></td>
+                <td class="px-4 py-2 border-b text-sm text-right space-x-2">
+                    <a th:href="@{'/crud/diak/szerkesztes/' + ${d.id}}"
+                       class="text-red-600 hover:text-red-900 font-semibold underline">
+                        Szerkesztés
+                    </a>
+                    <a th:href="@{'/crud/diak/torles/' + ${d.id}}"
+                       onclick="return confirm('Biztosan törölni szeretnéd?')"
+                       class="text-red-600 hover:text-red-900 font-semibold underline">
+                        Törlés
+                    </a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<head>
+    <title>Statisztikák</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="max-w-7xl mx-auto space-y-8">
+        <h2 class="text-4xl font-bold text-center bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-8">
+            📊 Tanulmányi Statisztikák Dashboard
+        </h2>
+
+        <!-- Oszlopdiagram - Átlag tárgyak szerint -->
+        <div class="bg-gradient-to-br from-red-50 via-white to-orange-50 p-8 rounded-2xl shadow-2xl border-2 border-red-100">
+            <h3 class="text-2xl font-bold text-red-800 mb-6 flex items-center gap-3">
+                <span class="text-4xl">📈</span> 
+                <span>Átlagos Jegyek Tárgyak Szerint</span>
+            </h3>
+            <div class="bg-white p-4 rounded-xl shadow-inner">
+                <canvas id="barChart" class="max-h-96"></canvas>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- Pie Chart - Jegyek eloszlása -->
+            <div class="bg-gradient-to-br from-pink-50 via-white to-rose-50 p-8 rounded-2xl shadow-2xl border-2 border-pink-100">
+                <h3 class="text-2xl font-bold text-pink-800 mb-6 flex items-center gap-3">
+                    <span class="text-4xl">🎯</span>
+                    <span>Jegyek Eloszlása</span>
+                </h3>
+                <div class="bg-white p-4 rounded-xl shadow-inner">
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Radar Chart - Teljesítmény profil -->
+            <div class="bg-gradient-to-br from-orange-50 via-white to-yellow-50 p-8 rounded-2xl shadow-2xl border-2 border-orange-100">
+                <h3 class="text-2xl font-bold text-orange-800 mb-6 flex items-center gap-3">
+                    <span class="text-4xl">🎭</span>
+                    <span>Teljesítmény Profil</span>
+                </h3>
+                <div class="bg-white p-4 rounded-xl shadow-inner">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Line Chart - Havi trend -->
+        <div class="bg-gradient-to-br from-red-50 via-white to-pink-50 p-8 rounded-2xl shadow-2xl border-2 border-red-100">
+            <h3 class="text-2xl font-bold text-red-800 mb-6 flex items-center gap-3">
+                <span class="text-4xl">📉</span>
+                <span>Teljesítmény Havi Trendje</span>
+            </h3>
+            <div class="bg-white p-4 rounded-xl shadow-inner">
+                <canvas id="lineChart" class="max-h-80"></canvas>
+            </div>
+        </div>
+
+        <!-- Doughnut Chart - Top tantárgyak -->
+        <div class="bg-gradient-to-br from-green-50 via-white to-emerald-50 p-8 rounded-2xl shadow-2xl border-2 border-green-100">
+            <h3 class="text-2xl font-bold text-green-800 mb-6 flex items-center gap-3">
+                <span class="text-4xl">🏆</span>
+                <span>Top 5 Legjobb Tantárgy</span>
+            </h3>
+            <div class="bg-white p-4 rounded-xl shadow-inner flex justify-center">
+                <canvas id="doughnutChart" class="max-w-md"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Check if Chart.js loaded
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js failed to load!');
+            document.querySelector('.max-w-7xl').innerHTML = '<div class="text-center text-red-600 text-2xl p-8">Hiba: Chart.js nem töltődött be!</div>';
+        }
+        
+        const colorPalette = [
+            { bg: 'rgba(99, 102, 241, 0.8)', border: 'rgba(99, 102, 241, 1)' },
+            { bg: 'rgba(236, 72, 153, 0.8)', border: 'rgba(236, 72, 153, 1)' },
+            { bg: 'rgba(34, 197, 94, 0.8)', border: 'rgba(34, 197, 94, 1)' },
+            { bg: 'rgba(251, 146, 60, 0.8)', border: 'rgba(251, 146, 60, 1)' },
+            { bg: 'rgba(168, 85, 247, 0.8)', border: 'rgba(168, 85, 247, 1)' },
+            { bg: 'rgba(6, 182, 212, 0.8)', border: 'rgba(6, 182, 212, 1)' },
+            { bg: 'rgba(234, 179, 8, 0.8)', border: 'rgba(234, 179, 8, 1)' },
+            { bg: 'rgba(239, 68, 68, 0.8)', border: 'rgba(239, 68, 68, 1)' },
+            { bg: 'rgba(16, 185, 129, 0.8)', border: 'rgba(16, 185, 129, 1)' },
+            { bg: 'rgba(124, 58, 237, 0.8)', border: 'rgba(124, 58, 237, 1)' }
+        ];
+
+        document.addEventListener("DOMContentLoaded", async function () {
+            const response = await fetch("/diagram/data");
+            const data = await response.json();
+
+            const labels = data.map(d => d.label);
+            const values = data.map(d => d.value);
+
+            // 1. BAR CHART - Színes oszlopdiagram
+            const ctxBar = document.getElementById("barChart").getContext("2d");
+            new Chart(ctxBar, {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Átlagjegy",
+                        data: values,
+                        backgroundColor: colorPalette.map(c => c.bg),
+                        borderColor: colorPalette.map(c => c.border),
+                        borderWidth: 3,
+                        borderRadius: 10,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                            padding: 15,
+                            titleFont: { size: 16, weight: 'bold' },
+                            bodyFont: { size: 14 },
+                            callbacks: {
+                                label: (ctx) => `Átlag: ${ctx.parsed.y.toFixed(2)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 5,
+                            ticks: { stepSize: 1, font: { size: 13 } },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            ticks: { font: { size: 12 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // 2. PIE CHART - Jegyek eloszlása
+            const gradeCount = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+            values.forEach(v => {
+                const grade = Math.round(v);
+                if (grade >= 1 && grade <= 5) gradeCount[grade]++;
+            });
+
+            const ctxPie = document.getElementById("pieChart").getContext("2d");
+            new Chart(ctxPie, {
+                type: "pie",
+                data: {
+                    labels: ['1 - Elégtelen', '2 - Elégséges', '3 - Közepes', '4 - Jó', '5 - Jeles'],
+                    datasets: [{
+                        data: Object.values(gradeCount),
+                        backgroundColor: [
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(251, 146, 60, 0.8)',
+                            'rgba(234, 179, 8, 0.8)',
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(99, 102, 241, 0.8)'
+                        ],
+                        borderColor: '#fff',
+                        borderWidth: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { padding: 20, font: { size: 13 } }
+                        }
+                    }
+                }
+            });
+
+            // 3. RADAR CHART - Teljesítmény profil (top 6 tárgy)
+            const ctxRadar = document.getElementById("radarChart").getContext("2d");
+            new Chart(ctxRadar, {
+                type: "radar",
+                data: {
+                    labels: labels.slice(0, 6),
+                    datasets: [{
+                        label: 'Teljesítmény',
+                        data: values.slice(0, 6),
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: 'rgba(239, 68, 68, 1)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 3,
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 5,
+                            ticks: { stepSize: 1 }
+                        }
+                    }
+                }
+            });
+
+            // 4. LINE CHART - Havi trend (szimulált)
+            const months = ['Szeptember', 'Október', 'November', 'December', 'Január', 'Február'];
+            const avgTrend = months.map(() => (Math.random() * 1.2 + 3.5).toFixed(2));
+
+            const ctxLine = document.getElementById("lineChart").getContext("2d");
+            new Chart(ctxLine, {
+                type: "line",
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Átlagos Teljesítmény',
+                        data: avgTrend,
+                        borderColor: 'rgba(251, 146, 60, 1)',
+                        backgroundColor: 'rgba(251, 146, 60, 0.1)',
+                        borderWidth: 4,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: 'rgba(251, 146, 60, 1)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 3,
+                        pointRadius: 8,
+                        pointHoverRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { 
+                            labels: { font: { size: 14, weight: 'bold' } }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, max: 5, ticks: { stepSize: 0.5 } }
+                    }
+                }
+            });
+
+            // 5. DOUGHNUT CHART - Top 5 tantárgy
+            const ctxDoughnut = document.getElementById("doughnutChart").getContext("2d");
+            new Chart(ctxDoughnut, {
+                type: "doughnut",
+                data: {
+                    labels: labels.slice(0, 5),
+                    datasets: [{
+                        data: values.slice(0, 5),
+                        backgroundColor: colorPalette.slice(0, 5).map(c => c.bg),
+                        borderColor: '#fff',
+                        borderWidth: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { padding: 20, font: { size: 13 } }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</div>
+</body>
+</html>
